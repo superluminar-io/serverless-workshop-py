@@ -1,0 +1,159 @@
+Parameters:
+  EC2InstanceType:
+    Default: t2.micro
+    Description: EC2 instance type on which IDE runs
+    Type: String
+  AutoHibernateTimeout:
+    Default: 30
+    Description: How many minutes idle before shutting down the IDE
+    Type: Number
+  SubnetIdentifier:
+    Description: SubnetId
+    Type: AWS::EC2::Subnet::Id
+  CodeBucketName:
+    Description: Stores the code to initialize the CodeCommit repository
+    Type: String
+    Default: sac-workshop-eu-central-1-init
+  CodeBucketKey:
+    Description: Name of the zipfile containing the code
+    Type: String
+    Default: repository-init.zip
+
+Resources:
+  IDE:
+    Type: AWS::Cloud9::EnvironmentEC2
+    Properties:
+      Repositories:
+        - RepositoryUrl: !GetAtt CodeRepository.CloneUrlHttp
+          PathComponent: !GetAtt CodeRepository.Name
+      Description: Cloud9 IDE
+      AutomaticStopTimeMinutes:
+        Ref: AutoHibernateTimeout
+      SubnetId:
+        Ref: SubnetIdentifier
+      InstanceType:
+        Ref: EC2InstanceType
+      Name:
+        Ref: AWS::StackName
+
+  CodeRepository:
+    Type: AWS::CodeCommit::Repository
+    Properties:
+      RepositoryName: SACWorkshop
+      RepositoryDescription: Sample Code for Cloud Architect Conference Workshop
+      Code:
+        S3:
+          Bucket: !Ref CodeBucketName
+          Key: !Ref CodeBucketKey
+
+  ArtifactStoreBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      VersioningConfiguration:
+        Status: Enabled
+      AccessControl: BucketOwnerFullControl
+
+  Pipeline:
+    Type: AWS::CodePipeline::Pipeline
+    Properties:
+      RoleArn: !GetAtt PipelineRole.Arn
+      ArtifactStore:
+        Location:
+          Ref:
+            ArtifactStoreBucket
+        Type: S3
+      Stages:
+        - Name: Source
+          Actions:
+            - Name: SourceAction
+              ActionTypeId:
+                Category: Source
+                Owner: AWS
+                Version: 1
+                Provider: CodeCommit
+              InputArtifacts: []
+              OutputArtifacts:
+                - Name: SourceOutput
+              Configuration:
+                BranchName: master
+                RepositoryName: !GetAtt CodeRepository.Name
+              RunOrder: 1
+
+        - Name: Deploy
+          Actions:
+            - Name: DeployAction
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Version: 1
+                Provider: CodeBuild
+              InputArtifacts:
+                - Name: SourceOutput
+              OutputArtifacts:
+                - Name: DeployActionOutput
+              Configuration:
+                ProjectName:
+                  Ref: DeployBuild
+              RunOrder: 2
+
+  PipelineRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          Effect: Allow
+          Principal:
+            Service: codepipeline.amazonaws.com
+          Action: sts:AssumeRole
+      Path: /
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AdministratorAccess
+
+  DeployBuild:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Artifacts:
+        Type: CODEPIPELINE
+      Environment:
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/standard:2.0
+        Type: LINUX_CONTAINER
+        EnvironmentVariables:
+          - Name: LC_CTYPE
+            Value: en_US.UTF-8
+      Name: DeployBuild
+      ServiceRole: !Ref DeployRole
+      Source:
+        Type: CODEPIPELINE
+        BuildSpec: |
+          version: 0.2
+          phases:
+            install:
+              runtime-versions:
+                python: 3.7
+            build:
+              commands:
+                - make test
+                - make package
+            post_build:
+              commands:
+                - make deploy
+
+  DeployRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          Effect: Allow
+          Principal:
+            Service: codebuild.amazonaws.com
+          Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AdministratorAccess
+
+Outputs:
+  Cloud9IdeUrl:
+    Description: Url to directly access Cloud9 IDE
+    Value: !Sub https://eu-central-1.console.aws.amazon.com/cloud9/ide/${IDE}
