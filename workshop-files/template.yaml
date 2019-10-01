@@ -2,190 +2,21 @@ AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 
 Resources:
-    CreateUrlFunction:
+    HelloWorldFunction:
         Type: AWS::Serverless::Function
         Properties:
-            FunctionName: create_url
-            AutoPublishAlias: live
-            CodeUri: create_url
+            FunctionName: hello_world
+            CodeUri: hello_world
             Handler: app.lambda_handler
             Runtime: python3.7
-            Tracing: Active
-            Events:
-                Post:
-                    Type: Api
-                    Properties:
-                        RestApiId: !Ref ShortenerApi
-                        Path: /short
-                        Method: post
-                        Auth:
-                            Authorizer: Authorizer
-                OptionsCors:
-                    Type: Api
-                    Properties:
-                        RestApiId: !Ref ShortenerApi
-                        Path: /short
-                        Method: OPTIONS
-            Environment:
-                Variables:
-                    TABLE_NAME: !Ref DynamoDBTable
-            Policies:
-                - DynamoDBCrudPolicy:
-                      TableName: !Ref DynamoDBTable
-            DeploymentPreference:
-                Type: Canary10Percent5Minutes
-                Alarms:
-                    - !Ref AliasErrorMetricGreaterThanZeroAlarm
-                    - !Ref LatestVersionErrorMetricGreaterThanZeroAlarm
-
-    DynamoDBTable:
-        Type: AWS::DynamoDB::Table
-        Properties:
-            TableName: short-ids
-            BillingMode: PAY_PER_REQUEST
-            KeySchema:
-                - AttributeName: short_id
-                  KeyType: HASH
-            AttributeDefinitions:
-                - AttributeName: short_id
-                  AttributeType: S
-            StreamSpecification:
-                StreamViewType: NEW_IMAGE
-
-    GetUrlFunction:
-        Type: AWS::Serverless::Function
-        Properties:
-            FunctionName: get_url
-            AutoPublishAlias: live
-            CodeUri: get_url
-            Handler: app.lambda_handler
-            Runtime: python3.7
-            Tracing: Active
             Events:
                 Get:
                     Type: Api
                     Properties:
-                        RestApiId: !Ref ShortenerApi
-                        Path: /short/{short_id}
+                        Path: /hello/{name}
                         Method: get
-            Environment:
-                Variables:
-                    TABLE_NAME: !Ref DynamoDBTable
-            Policies:
-                - DynamoDBReadPolicy:
-                      TableName: !Ref DynamoDBTable
-
-    PreviewFunction:
-        Type: AWS::Serverless::Function
-        Properties:
-            FunctionName: preview
-            AutoPublishAlias: live
-            CodeUri: preview
-            Handler: app.lambda_handler
-            Runtime: python3.7
-            Events:
-                DynamoDBEvent:
-                    Type: DynamoDB
-                    Properties:
-                        Stream:
-                          !GetAtt DynamoDBTable.StreamArn
-                        StartingPosition: TRIM_HORIZON
-                        BatchSize: 10
-                    Environment:
-                        Variables:
-                            DYNAMODB_TABLE_NAME: !Ref PreviewTable
-            Environment:
-                Variables:
-                    TABLE_NAME: !Ref PreviewTable
-            Policies:
-                - DynamoDBCrudPolicy:
-                      TableName: !Ref PreviewTable
-
-    PreviewTable:
-        Type: AWS::DynamoDB::Table
-        Properties:
-            TableName: url-shortener-preview
-            BillingMode: PAY_PER_REQUEST
-            KeySchema:
-                - AttributeName: url
-                  KeyType: HASH
-            AttributeDefinitions:
-                - AttributeName: url
-                  AttributeType: S
-
-    AliasErrorMetricGreaterThanZeroAlarm:
-        Type: "AWS::CloudWatch::Alarm"
-        Properties:
-            AlarmDescription: Lambda Function Error > 0
-            ComparisonOperator: GreaterThanThreshold
-            Dimensions:
-                - Name: Resource
-                  Value: !Sub "${CreateUrlFunction}:live"
-                - Name: FunctionName
-                  Value: !Ref CreateUrlFunction
-            EvaluationPeriods: 2
-            MetricName: Errors
-            Namespace: AWS/Lambda
-            Period: 60
-            Statistic: Sum
-            Threshold: 0
-
-    LatestVersionErrorMetricGreaterThanZeroAlarm:
-        Type: "AWS::CloudWatch::Alarm"
-        Properties:
-            AlarmDescription: Lambda Function Error > 0
-            ComparisonOperator: GreaterThanThreshold
-            Dimensions:
-                - Name: Resource
-                  Value: !Sub "${CreateUrlFunction}:live"
-                - Name: FunctionName
-                  Value: !Ref CreateUrlFunction
-                - Name: ExecutedVersion
-                  Value: !GetAtt CreateUrlFunction.Version.Version
-            EvaluationPeriods: 2
-            MetricName: Errors
-            Namespace: AWS/Lambda
-            Period: 60
-            Statistic: Sum
-            Threshold: 0
-
-    ShortenerApi:
-        Type: AWS::Serverless::Api
-        Properties:
-            StageName: Prod
-            TracingEnabled: true
-            Cors: "'*'"
-            Auth:
-                Authorizers:
-                    Authorizer:
-                        UserPoolArn: !GetAtt UserPool.Arn
-
-    UserPool:
-        Type: AWS::Cognito::UserPool
-        Properties:
-            AutoVerifiedAttributes:
-                - email
-            EmailVerificationSubject: 'Your verification code'
-            EmailVerificationMessage: 'Your code is {####}'
-            UserPoolName: ShortenerUsers
-            Policies:
-                PasswordPolicy:
-                    MinimumLength: 8
-            UsernameAttributes:
-                - email
-            Schema:
-                - AttributeDataType: String
-                  Name: email
-                  Required: false
-
-    UserPoolClient:
-        Type: AWS::Cognito::UserPoolClient
-        Properties:
-            UserPoolId: !Ref UserPool
-            ClientName: ShortenerUsersClient
-            GenerateSecret: false
 
 Outputs:
     ShortURLApigwURL:
         Description: "API Gateway endpoint URL for Prod environment for Create URL Function"
-        Value: !Sub "https://${ShortenerApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/short"
+        Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/short"
