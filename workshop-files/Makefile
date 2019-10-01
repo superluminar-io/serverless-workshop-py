@@ -19,7 +19,6 @@ bucket: guard-PREFIX
 
 package: bucket guard-PREFIX
 	@ mkdir -p dist
-	@ pip install -r create_url/requirements.txt -t create_url
 	@ aws cloudformation package \
 		--template-file $(FILE_TEMPLATE) \
 		--s3-bucket $(AWS_BUCKET_NAME) \
@@ -32,11 +31,7 @@ deploy: guard-PREFIX
 		--region $(AWS_REGION) \
 		--capabilities CAPABILITY_IAM \
 		--stack-name $(AWS_STACK_NAME) \
-		--force-upload \
-		--parameter-overrides \
-			PREFIX=$(PREFIX) \
-			PROJECT=$(PROJECT)
-
+		--force-upload
 destroy:
 	@ aws cloudformation delete-stack \
 		--stack-name $(AWS_STACK_NAME) \
