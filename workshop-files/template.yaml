@@ -84,4 +84,4 @@ Resources:
 Outputs:
     ShortURLApigwURL:
         Description: "API Gateway endpoint URL for Prod environment for Create URL Function"
-        Value: !Sub "https://${ShortenerApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/short"
+        Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/short"
