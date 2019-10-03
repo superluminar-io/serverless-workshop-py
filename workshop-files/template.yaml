@@ -81,6 +81,43 @@ Resources:
                 AllowHeaders: "'content-type'"
                 AllowOrigin: "'*'"
 
+    PreviewFunction:
+        Type: AWS::Serverless::Function
+        Properties:
+            FunctionName: preview
+            CodeUri: preview
+            Handler: app.lambda_handler
+            Runtime: python3.7
+            Events:
+                DynamoDBEvent:
+                    Type: DynamoDB
+                    Properties:
+                        Stream:
+                          !GetAtt DynamoDBTable.StreamArn
+                        StartingPosition: TRIM_HORIZON
+                        BatchSize: 10
+                    Environment:
+                        Variables:
+                            DYNAMODB_TABLE_NAME: !Ref PreviewTable
+            Environment:
+                Variables:
+                    TABLE_NAME: !Ref PreviewTable
+            Policies:
+                - DynamoDBCrudPolicy:
+                      TableName: !Ref PreviewTable
+
+    PreviewTable:
+        Type: AWS::DynamoDB::Table
+        Properties:
+            TableName: url-shortener-preview
+            BillingMode: PAY_PER_REQUEST
+            KeySchema:
+                - AttributeName: url
+                  KeyType: HASH
+            AttributeDefinitions:
+                - AttributeName: url
+                  AttributeType: S
+
 Outputs:
     ShortURLApigwURL:
         Description: "API Gateway endpoint URL for Prod environment for Create URL Function"
