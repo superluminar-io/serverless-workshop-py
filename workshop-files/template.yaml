@@ -29,6 +29,7 @@ Resources:
                     Properties:
                         Path: /short
                         Method: post
+                        RestApiId: !Ref ShortenerApi
             Environment:
                 Variables:
                     TABLE_NAME: !Ref DynamoDBTable
@@ -63,6 +64,7 @@ Resources:
                     Properties:
                         Path: /short/{short_id}
                         Method: get
+                        RestApiId: !Ref ShortenerApi
             Environment:
                 Variables:
                     TABLE_NAME: !Ref DynamoDBTable
@@ -70,7 +72,16 @@ Resources:
                 - DynamoDBReadPolicy:
                       TableName: !Ref DynamoDBTable
 
+    ShortenerApi:
+        Type: AWS::Serverless::Api
+        Properties:
+            StageName: Prod
+            Cors:
+                AllowMethods: "'POST,OPTIONS'"
+                AllowHeaders: "'content-type'"
+                AllowOrigin: "'*'"
+
 Outputs:
     ShortURLApigwURL:
         Description: "API Gateway endpoint URL for Prod environment for Create URL Function"
-        Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/short"
+        Value: !Sub "https://${ShortenerApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/short"
