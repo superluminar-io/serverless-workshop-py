@@ -24,6 +24,7 @@ Resources:
             Handler: app.lambda_handler
             Runtime: python3.7
             AutoPublishAlias: live
+            Tracing: Active
             Events:
                 Post:
                     Type: Api
@@ -66,6 +67,7 @@ Resources:
             CodeUri: get_url
             Handler: app.lambda_handler
             Runtime: python3.7
+            Tracing: Active
             Events:
                 Get:
                     Type: Api
@@ -92,6 +94,7 @@ Resources:
                 Authorizers:
                     CognitoAuthorizer:
                         UserPoolArn: !GetAtt UserPool.Arn
+            TracingEnabled: true
 
     PreviewFunction:
         Type: AWS::Serverless::Function
