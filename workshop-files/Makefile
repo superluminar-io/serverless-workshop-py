@@ -57,6 +57,7 @@ fetch-frontend:
 	mv sac-workshop-fe-master frontend
 
 deploy-frontend: fe-bucket
+	(cd frontend && npm install)
 	(cd frontend && npm run-script build)
 	(cd frontend && aws s3 sync build/ s3://$(FE_BUCKET_NAME) --delete --acl public-read)
 	@ echo
