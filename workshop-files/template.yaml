@@ -23,6 +23,7 @@ Resources:
             CodeUri: create_url
             Handler: app.lambda_handler
             Runtime: python3.7
+            AutoPublishAlias: live
             Events:
                 Post:
                     Type: Api
@@ -38,6 +39,11 @@ Resources:
             Policies:
                 - DynamoDBCrudPolicy:
                       TableName: !Ref DynamoDBTable
+            DeploymentPreference:
+                Type: Canary10Percent5Minutes
+                Alarms:
+                    - !Ref AliasErrorMetricGreaterThanZeroAlarm
+                    - !Ref LatestVersionErrorMetricGreaterThanZeroAlarm
 
     DynamoDBTable:
         Type: AWS::DynamoDB::Table
@@ -148,6 +154,42 @@ Resources:
             UserPoolId: !Ref UserPool
             ClientName: ShortenerUsersClient
             GenerateSecret: false
+
+    AliasErrorMetricGreaterThanZeroAlarm:
+        Type: "AWS::CloudWatch::Alarm"
+        Properties:
+            AlarmDescription: Lambda Function Error > 0
+            ComparisonOperator: GreaterThanThreshold
+            Dimensions:
+                - Name: Resource
+                  Value: !Sub "${CreateUrlFunction}:live"
+                - Name: FunctionName
+                  Value: !Ref CreateUrlFunction
+            EvaluationPeriods: 2
+            MetricName: Errors
+            Namespace: AWS/Lambda
+            Period: 60
+            Statistic: Sum
+            Threshold: 0
+
+    LatestVersionErrorMetricGreaterThanZeroAlarm:
+        Type: "AWS::CloudWatch::Alarm"
+        Properties:
+            AlarmDescription: Lambda Function Error > 0
+            ComparisonOperator: GreaterThanThreshold
+            Dimensions:
+                - Name: Resource
+                  Value: !Sub "${CreateUrlFunction}:live"
+                - Name: FunctionName
+                  Value: !Ref CreateUrlFunction
+                - Name: ExecutedVersion
+                  Value: !GetAtt CreateUrlFunction.Version.Version
+            EvaluationPeriods: 2
+            MetricName: Errors
+            Namespace: AWS/Lambda
+            Period: 60
+            Statistic: Sum
+            Threshold: 0
 
 Outputs:
     ShortURLApigwURL:
