@@ -27,6 +27,7 @@ fe-bucket: guard-PREFIX
 
 package: bucket guard-PREFIX
 	@ mkdir -p dist
+	@ pip install -r preview/requirements.txt -t preview
 	@ aws cloudformation package \
 		--template-file $(FILE_TEMPLATE) \
 		--s3-bucket $(AWS_BUCKET_NAME) \
