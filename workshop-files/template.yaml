@@ -119,6 +119,9 @@ Resources:
                   AttributeType: S
 
 Outputs:
-    ShortURLApigwURL:
-        Description: "API Gateway endpoint URL for Prod environment for Create URL Function"
+    HelloWorldEndpoint:
+        Description: "Hello World function HTTPS endpoint"
+        Value: !Sub "https://${ShortenerApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/hello"
+    ShortURLEndpoint:
+        Description: "Short URL functions HTTPS endpoint"
         Value: !Sub "https://${ShortenerApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/short"
