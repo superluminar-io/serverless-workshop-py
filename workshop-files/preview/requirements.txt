@@ -1,2 +1,2 @@
 boto3==1.9.41
-webpreview==1.6.0
+link_preview==1.0
