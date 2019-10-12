@@ -201,12 +201,45 @@ Resources:
             CodeUri: slow
             Handler: app.lambda_handler
             Runtime: python3.7
+            ReservedConcurrentExecutions: 1
+            DeadLetterQueue:
+                Type: SQS
+                TargetArn: !GetAtt DeadLetterQueue.Arn
+            Events:
+                Post:
+                    Type: SQS
+                    Properties:
+                        Queue: !GetAtt BufferQueue.Arn
+                        BatchSize: 1
+                        Enabled: true
+
+    BufferFunction:
+        Type: AWS::Serverless::Function
+        Properties:
+            FunctionName: buffer
+            CodeUri: buffer
+            Handler: app.lambda_handler
+            Runtime: python3.7
             Events:
                 Get:
                     Type: Api
                     Properties:
                         Path: /slow
                         Method: get
+            Environment:
+                Variables:
+                    QUEUE_URL: !Ref BufferQueue
+            Policies:
+                - SQSSendMessagePolicy:
+                    QueueName: !GetAtt BufferQueue.QueueName
+                - SQSSendMessagePolicy:
+                    QueueName: !GetAtt DeadLetterQueue.QueueName
+
+    BufferQueue:
+        Type: AWS::SQS::Queue
+
+    DeadLetterQueue:
+        Type: AWS::SQS::Queue
 Outputs:
     HelloWorldEndpoint:
         Description: "Hello World function HTTPS endpoint"
