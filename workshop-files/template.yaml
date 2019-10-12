@@ -194,6 +194,19 @@ Resources:
             Statistic: Sum
             Threshold: 0
 
+    SlowFunction:
+        Type: AWS::Serverless::Function
+        Properties:
+            FunctionName: slow
+            CodeUri: slow
+            Handler: app.lambda_handler
+            Runtime: python3.7
+            Events:
+                Get:
+                    Type: Api
+                    Properties:
+                        Path: /slow
+                        Method: get
 Outputs:
     HelloWorldEndpoint:
         Description: "Hello World function HTTPS endpoint"
@@ -201,6 +214,9 @@ Outputs:
     ShortURLEndpoint:
         Description: "Short URL functions HTTPS endpoint"
         Value: !Sub "https://${ShortenerApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/short"
+    SlowEndpoint:
+        Description: "Slow functions HTTPS endpoint"
+        Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/slow"
     UserPoolId:
         Description: "Id of the Cognito User Pool to be referenced in Clients"
         Value: !Ref UserPool
