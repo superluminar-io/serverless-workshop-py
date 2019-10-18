@@ -18,6 +18,9 @@ Parameters:
     Description: Name of the zipfile containing the code
     Type: String
     Default: repository-init.zip
+  GitRepositoryName:
+    Description: Name of the CodeCommit git repository (Must be unique per AWS Account)
+    Type: String
 
 Resources:
   IDE:
@@ -39,7 +42,7 @@ Resources:
   CodeRepository:
     Type: AWS::CodeCommit::Repository
     Properties:
-      RepositoryName: SACWorkshop
+      RepositoryName: !Ref GitRepositoryName
       RepositoryDescription: Sample Code for Cloud Architect Conference Workshop
       Code:
         S3:
