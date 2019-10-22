@@ -13,7 +13,7 @@ Parameters:
   CodeBucketName:
     Description: Stores the code to initialize the CodeCommit repository
     Type: String
-    Default: sac-workshop-eu-central-1-init
+    Default: serverless-workshop-eu-central-1-init
   CodeBucketKey:
     Description: Name of the zipfile containing the code
     Type: String
