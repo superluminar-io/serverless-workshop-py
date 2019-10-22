@@ -39,7 +39,7 @@ Resources:
   CodeRepository:
     Type: AWS::CodeCommit::Repository
     Properties:
-      RepositoryName: SACWorkshop
+      RepositoryName: !Sub '${AWS::StackName}-repository'
       RepositoryDescription: Sample Code for Cloud Architect Conference Workshop
       Code:
         S3:
