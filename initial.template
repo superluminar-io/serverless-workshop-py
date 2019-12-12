@@ -40,7 +40,7 @@ Resources:
     Type: AWS::CodeCommit::Repository
     Properties:
       RepositoryName: !Sub '${AWS::StackName}-repository'
-      RepositoryDescription: Sample Code for Cloud Architect Conference Workshop
+      RepositoryDescription: Initial Workshop Code
       Code:
         S3:
           Bucket: !Ref CodeBucketName
