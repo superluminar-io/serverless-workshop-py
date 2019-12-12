@@ -1,6 +1,6 @@
 Parameters:
   EC2InstanceType:
-    Default: t2.micro
+    Default: t3.large
     Description: EC2 instance type on which IDE runs
     Type: String
   AutoHibernateTimeout:
