@@ -1,6 +1,7 @@
 
 FE_BUCKET_NAME := $(PREFIX)-$(PROJECT)-fe
 AWS_REGION ?= eu-central-1
+FE_REPO_NAME := serverless-workshop-fe
 
 test:
 	@:
@@ -14,10 +15,10 @@ fe-bucket: guard-FE_BUCKET_NAME
 
 fetch-frontend:
 	rm -rf frontend
-	wget https://github.com/superluminar-io/sac-workshop-fe/archive/master.zip -O master.zip
+	wget https://github.com/superluminar-io/$(FE_REPO_NAME)/archive/master.zip -O master.zip
 	unzip master.zip
 	rm -f master.zip
-	mv sac-workshop-fe-master frontend
+	mv $(FE_REPO_NAME)-master frontend
 
 deploy-frontend: fe-bucket
 	(cd frontend && npm install)
