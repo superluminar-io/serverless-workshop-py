@@ -135,7 +135,6 @@ Resources:
             build:
               commands:
                 - make test
-                - make package
             post_build:
               commands:
                 - make deploy
