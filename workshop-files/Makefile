@@ -1,5 +1,3 @@
-
-FE_BUCKET_NAME := $(PREFIX)-$(PROJECT)-fe
 AWS_REGION ?= eu-central-1
 FE_REPO_NAME := serverless-workshop-fe
 
